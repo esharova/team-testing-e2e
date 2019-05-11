@@ -1,19 +1,9 @@
-const Allure = require('allure-js-commons').default;
-
-const STATUS =  {
-    Passed : 'passed',
-    Pending: 'pending',
-    Skipped: 'skipped',
-    Failed: 'failed',
-    Broken: 'broken'
-}
-
 class Reporter {
 
     constructor(allure) {
         this.allure = allure;
+        this.labels = {};
     }
-
     set description(description) {
         this.allure.setDescription(description);
         return this;
@@ -24,13 +14,45 @@ class Reporter {
         return this;
     }
 
+    story(story) {
+        this.addLabel('story', story);
+        return this;
+    }
+
+    epic(epic) {
+        this.addLabel('epic', epic);
+        return this;
+    }
+
+    startStep(step) {
+        this.allure.startStep(step);
+        return this;
+    }
+
+    endStep(status) {
+        this.allure.endStep(status || 'passed');
+        return this;
+    }
+
     addAttachment(name, buffer, type) {
         !!this.allure.getCurrentSuite() && this.allure.addAttachment(name, buffer, type);
         return this;
     }
 
-    addLabel(name, string) {
-        this.allure.getCurrentTest().addLabel(name, value);
+    addLabel(name, value) {
+        if (this.allure.getCurrentSuite() && !this.allure.getCurrentTest()) {
+            this.allure.getCurrentSuite().addLabel(name, value);
+            return this;
+        }
+        if( this.allure.getCurrentSuite() && this.allure.getCurrentTest()) {
+            this.allure.getCurrentTest().addLabel(name, value);
+            return this;
+        }
+        this.labels = {
+            ...this.labels,
+            [name]: value
+        };
+
         return this;
     };
 }
